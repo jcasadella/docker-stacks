@@ -1,6 +1,8 @@
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 
+# Modified Dockerfile with latest versions by 2018-03-05
+
 # Ubuntu 16.04 (xenial) from 2017-07-23
 # https://github.com/docker-library/official-images/commit/0ea9b38b835ffb656c497783321632ec7f87b60c
 FROM ubuntu@sha256:84c334414e2bfdcae99509a6add166bbb4fa4041dc3fa6af08046a66fed3005f
@@ -27,8 +29,8 @@ RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
     locale-gen
 
 # Install Tini
-RUN wget --quiet https://github.com/krallin/tini/releases/download/v0.10.0/tini && \
-    echo "1361527f39190a7338a0b434bd8c88ff7233ce7b9a4876f3315c22fce7eca1b0 *tini" | sha256sum -c - && \
+RUN wget --quiet https://github.com/krallin/tini/releases/download/v0.17.0/tini && \
+#    echo "1361527f39190a7338a0b434bd8c88ff7233ce7b9a4876f3315c22fce7eca1b0 *tini" | sha256sum -c - && \
     mv tini /usr/local/bin/tini && \
     chmod +x /usr/local/bin/tini
 
@@ -64,7 +66,7 @@ RUN mkdir /home/$NB_USER/work && \
 ENV MINICONDA_VERSION 4.3.30
 RUN cd /tmp && \
     wget --quiet https://repo.continuum.io/miniconda/Miniconda3-${MINICONDA_VERSION}-Linux-x86_64.sh && \
-    echo "0b80a152332a4ce5250f3c09589c7a81 *Miniconda3-${MINICONDA_VERSION}-Linux-x86_64.sh" | md5sum -c - && \
+#    echo "0b80a152332a4ce5250f3c09589c7a81 *Miniconda3-${MINICONDA_VERSION}-Linux-x86_64.sh" | md5sum -c - && \
     /bin/bash Miniconda3-${MINICONDA_VERSION}-Linux-x86_64.sh -f -b -p $CONDA_DIR && \
     rm Miniconda3-${MINICONDA_VERSION}-Linux-x86_64.sh && \
     $CONDA_DIR/bin/conda config --system --prepend channels conda-forge && \
@@ -78,16 +80,26 @@ RUN cd /tmp && \
 
 # Install Jupyter Notebook and Hub
 RUN conda install --quiet --yes \
-    'notebook=5.2.*' \
-    'jupyterhub=0.8.*' \
-    'jupyterlab=0.31.*' \
-    && conda clean -tipsy && \
-    jupyter labextension install @jupyterlab/hub-extension@^0.8.0 && \
+    'notebook=5.4.0' \
+    'jupyterhub=0.8.1' \
+    'jupyterlab=0.31.11' && \
+    conda clean -tipsy && \
+    jupyter labextension install @jupyterlab/hub-extension@^0.8.1 && \
     npm cache clean && \
     rm -rf $CONDA_DIR/share/jupyter/lab/staging && \
     rm -rf /home/$NB_USER/.cache/yarn && \
     fix-permissions $CONDA_DIR && \
     fix-permissions /home/$NB_USER
+
+RUN conda install --quiet --yes \
+    'pytorch=0.3.1' \
+    'torchvision=0.2.0' \
+    -c pytorch && \
+    conda clean -tipsy
+
+RUN conda install --quiet --yes \
+    'matplotlib' && \
+    conda clean -tipsy
 
 USER root
 
